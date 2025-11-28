@@ -1,7 +1,9 @@
+// src/App.js
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 
+// Auth & Dashboard
 import Login from "./login";
 import Dashboard from "./dashboard";
 
@@ -16,39 +18,28 @@ import InvoiceManager from "./pages/InvoiceManager";
 import EmailSummary from "./pages/EmailSummary";
 import CostManager from "./pages/CostManager";
 import CostSummary from "./pages/CostSummary";
+import Renewal from "./pages/Renewal";
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Handle OTP redirect + Google redirect + existing sessions
+  // Check Supabase session on mount & listen for auth changes
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-
-      if (data?.session?.user) {
-        setUser(data.session.user);
-      }
-
+      if (data?.session?.user) setUser(data.session.user);
       setLoading(false);
     };
 
     checkSession();
 
-    // Listen for login/logout events
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-        } else {
-          setUser(null);
-        }
-      }
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) setUser(session.user);
+      else setUser(null);
+    });
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+    return () => authListener.subscription.unsubscribe();
   }, []);
 
   if (loading) return <div>Loading...</div>;
@@ -57,33 +48,32 @@ function App() {
     <Router>
       <Routes>
         {/* LOGIN PAGE */}
-        <Route
-          path="/"
-          element={!user ? <Login /> : <Navigate to="/dashboard" />}
-        />
+        <Route path="/" element={!user ? <Login /> : <Navigate to="/dashboard" replace />} />
 
         {/* DASHBOARD (Protected) */}
-        <Route
-          path="/dashboard"
-          element={user ? <Dashboard setUser={setUser} /> : <Navigate to="/" />}
-        />
+        <Route path="/dashboard" element={user ? <Dashboard setUser={setUser} /> : <Navigate to="/" replace />} />
 
         {/* PROTECTED ROUTES */}
-        <Route path="/indent" element={user ? <Indent /> : <Navigate to="/" />} />
-        <Route path="/invoice-manager" element={user ? <InvoiceManager /> : <Navigate to="/" />} />
-        <Route path="/email-manager" element={user ? <EmailManager /> : <Navigate to="/" />} />
-        <Route path="/emailsummary" element={user ? <EmailSummary /> : <Navigate to="/" />} />
+        <Route path="/indent" element={user ? <Indent /> : <Navigate to="/" replace />} />
+        <Route path="/invoice-manager" element={user ? <InvoiceManager /> : <Navigate to="/" replace />} />
+        <Route path="/email-manager" element={user ? <EmailManager /> : <Navigate to="/" replace />} />
+        <Route path="/emailsummary" element={user ? <EmailSummary /> : <Navigate to="/" replace />} />
 
-        {/* Asset Modules */}
-        <Route path="/asset-details" element={user ? <AssetDetails /> : <Navigate to="/" />} />
-        <Route path="/scrap-items" element={user ? <ScrapItems /> : <Navigate to="/" />} />
-        <Route path="/stock-items" element={user ? <StockItems /> : <Navigate to="/" />} />
-        <Route path="/asset-summary" element={user ? <AssetSummary /> : <Navigate to="/" />} />
-        <Route path="/cost-manager" element={user ? <CostManager /> : <Navigate to="/" />} />
-        <Route path="/cost-summary" element={user ? <CostSummary /> : <Navigate to="/" />} />
+        {/* ASSET MODULES */}
+        <Route path="/asset-details" element={user ? <AssetDetails /> : <Navigate to="/" replace />} />
+        <Route path="/scrap-items" element={user ? <ScrapItems /> : <Navigate to="/" replace />} />
+        <Route path="/stock-items" element={user ? <StockItems /> : <Navigate to="/" replace />} />
+        <Route path="/asset-summary" element={user ? <AssetSummary /> : <Navigate to="/" replace />} />
 
-        {/* Otherwise redirect */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* COST MODULES */}
+        <Route path="/cost-manager" element={user ? <CostManager /> : <Navigate to="/" replace />} />
+        <Route path="/cost-summary" element={user ? <CostSummary /> : <Navigate to="/" replace />} />
+
+        {/* RENEWAL */}
+        <Route path="/renewal" element={user ? <Renewal /> : <Navigate to="/" replace />} />
+
+        {/* Catch-all redirect */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 import axios from "axios";
+import dayjs from "dayjs";
 
 import {
   ThemeProvider,
@@ -17,7 +18,9 @@ import {
   Typography,
   Divider,
   Button,
-  Collapse
+  Collapse,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -51,15 +54,22 @@ const Dashboard = ({ setUser }) => {
   const navigate = useNavigate();
 
   const [openAssets, setOpenAssets] = useState(false);
-  const [openEmail, setOpenEmail] = useState(false);
   const [openCost, setOpenCost] = useState(false);
-
   const [summary, setSummary] = useState([]);
+
+  // ---------- Renewal notification ----------
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "warning",
+  });
 
   useEffect(() => {
     fetchSummary();
+    fetchRenewalsNotification();
   }, []);
 
+  // ---------- Asset Summary ----------
   const fetchSummary = async () => {
     try {
       const res = await axios.get(process.env.REACT_APP_API_URL + "/asset-summary");
@@ -70,6 +80,35 @@ const Dashboard = ({ setUser }) => {
     }
   };
 
+  // ---------- Renewal Notification ----------
+  const fetchRenewalsNotification = async () => {
+    try {
+      const API_URL = process.env.REACT_APP_API_URL ;
+      const res = await axios.get(`${API_URL}/renewals`);
+      const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+
+      // Filter renewals due within 2 months
+      const dueSoon = data.filter((row) => {
+        if (!row.next_due_date) return false;
+        const nextDue = dayjs(row.next_due_date, "YYYY-MM-DD");
+        const today = dayjs();
+        const twoMonthsLater = today.add(2, "month");
+        return nextDue.isAfter(today.subtract(1, "day")) && nextDue.isBefore(twoMonthsLater.add(1, "day"));
+      });
+
+      if (dueSoon.length > 0) {
+        setSnackbar({
+          open: true,
+          message: `You have ${dueSoon.length} renewal(s) due within 2 months!`,
+          severity: "warning",
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch renewals for dashboard notification", err);
+    }
+  };
+
+  // ---------- Logout ----------
   const handleLogout = async () => {
     await supabase.auth.signOut();
     if (setUser) setUser(null);
@@ -79,7 +118,6 @@ const Dashboard = ({ setUser }) => {
   return (
     <ThemeProvider theme={darkTheme}>
       <Box sx={{ display: "flex" }}>
-
         {/* SIDEBAR */}
         <Drawer
           variant="permanent"
@@ -125,7 +163,7 @@ const Dashboard = ({ setUser }) => {
               {openAssets ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
 
-            <Collapse in={openAssets}>
+            <Collapse in={openAssets} timeout="auto" unmountOnExit>
               <List disablePadding>
                 <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/asset-details")}>
                   <ListItemIcon>
@@ -133,53 +171,23 @@ const Dashboard = ({ setUser }) => {
                   </ListItemIcon>
                   <ListItemText primary="Asset Details" />
                 </ListItemButton>
-
                 <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/asset-summary")}>
                   <ListItemIcon>
                     <BuildIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText primary="Asset Summary" />
                 </ListItemButton>
-
                 <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/scrap-items")}>
                   <ListItemIcon>
                     <BuildIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText primary="Scrap Items" />
                 </ListItemButton>
-
                 <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/stock-items")}>
                   <ListItemIcon>
                     <BuildIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText primary="Stock Items" />
-                </ListItemButton>
-              </List>
-            </Collapse>
-
-            {/* EMAIL */}
-            <ListItemButton onClick={() => setOpenEmail(!openEmail)}>
-              <ListItemIcon>
-                <DashboardIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText primary="Email Manager" />
-              {openEmail ? <ExpandLess /> : <ExpandMore />}
-            </ListItemButton>
-
-            <Collapse in={openEmail}>
-              <List disablePadding>
-                <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/email-manager")}>
-                  <ListItemIcon>
-                    <DashboardIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Email Manager" />
-                </ListItemButton>
-
-                <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/emailsummary")}>
-                  <ListItemIcon>
-                    <DashboardIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Email Summary" />
                 </ListItemButton>
               </List>
             </Collapse>
@@ -193,7 +201,7 @@ const Dashboard = ({ setUser }) => {
               {openCost ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
 
-            <Collapse in={openCost}>
+            <Collapse in={openCost} timeout="auto" unmountOnExit>
               <List disablePadding>
                 <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/cost-manager")}>
                   <ListItemIcon>
@@ -201,7 +209,6 @@ const Dashboard = ({ setUser }) => {
                   </ListItemIcon>
                   <ListItemText primary="Cost Manager" />
                 </ListItemButton>
-
                 <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/cost-summary")}>
                   <ListItemIcon>
                     <ReceiptIcon color="primary" />
@@ -210,6 +217,14 @@ const Dashboard = ({ setUser }) => {
                 </ListItemButton>
               </List>
             </Collapse>
+
+            {/* RENEWAL */}
+            <ListItemButton onClick={() => navigate("/renewal")}>
+              <ListItemIcon>
+                <ReceiptIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText primary="Renewal" />
+            </ListItemButton>
           </List>
 
           <Box sx={{ flexGrow: 1 }} />
@@ -229,74 +244,63 @@ const Dashboard = ({ setUser }) => {
 
         {/* MAIN CONTENT */}
         <Box
-  component="main"
-  sx={{
-    flexGrow: 1,
-    p: 4,
-    ml: `${drawerWidth}px`,
-    mt: "80px",   // pushes content below the fixed header
-  }}
->
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: 4,
+            ml: `${drawerWidth}px`,
+            mt: "80px",
+          }}
+        >
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              left: `${drawerWidth}px`,
+              right: 0,
+              height: "64px",
+              bgcolor: "black",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1200,
+              boxShadow: 3,
+            }}
+          >
+            <Typography variant="h4" fontWeight={700} sx={{ color: "white" }}>
+              Welcome to CRI IT Portal
+            </Typography>
+          </Box>
 
+          {/* TABLE SECTION */}
+          <Box sx={{ position: "relative", left: "-250px", top: "-50px" }}>
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5, textAlign: "left" }}>
+              Assets
+            </Typography>
 
-          {/* PAGE HEADER WITH BACKGROUND */}
-       {/* PAGE HEADER WITH BACKGROUND */}
-{/* PAGE HEADER – FULL WIDTH, ALIGNED WITH SIDEBAR */}
-
-<Box
-  sx={{
-    position: "fixed",
-    top: 0,
-    left: `${drawerWidth}px`,
-    right: 0,
-    height: "64px",
-    bgcolor: "black",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1200,
-    boxShadow: 3,
-  }}
->
-  <Typography
-    variant="h4"
-    fontWeight={700}
-    sx={{ color: "white" }}   // 👈 white font
-  >
-    Welcome to CRI IT Portal
-  </Typography>
-</Box>
-
-
-
-{/* TABLE SECTION */}
-<Box sx={{ position: "relative", left: "-250px", top: "-50px" }}>
-  {/* Table Header */}
-  <Typography 
-    variant="h5" 
-    fontWeight={700} 
-    sx={{ mb: 0.5, textAlign: "left" }} // mb: 0 removes gap
-  >
-    Assets
-  </Typography>
-
-  {summary.length > 0 ? (
-    <AssetSummaryTable summary={summary} />
-  ) : (
-    <Typography sx={{ textAlign: "center", mt: 3 }}>
-      Loading summary...
-    </Typography>
-  )}
-</Box>
-
-
-
-
+            {summary.length > 0 ? (
+              <AssetSummaryTable summary={summary} />
+            ) : (
+              <Typography sx={{ textAlign: "center", mt: 3 }}>Loading summary...</Typography>
+            )}
+          </Box>
         </Box>
+
+        {/* ---------- Renewal Snackbar ---------- */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+        </Snackbar>
       </Box>
     </ThemeProvider>
   );
 };
 
 export default Dashboard;
+
+
 
