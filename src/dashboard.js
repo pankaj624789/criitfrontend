@@ -287,14 +287,26 @@ const Dashboard = ({ setUser }) => {
         </Box>
 
         {/* ---------- Renewal Snackbar ---------- */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        >
-          <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
-        </Snackbar>
+<Snackbar
+  open={snackbar.open}
+  autoHideDuration={8000}
+  onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+  anchorOrigin={{ vertical: "top", horizontal: "right" }}
+>
+  <Alert
+    severity={snackbar.severity}
+    sx={{
+      backgroundColor: "#ee3f39ff",   // custom background
+      color: "#e8f806ff",              // custom font color
+      fontWeight: 600,               // bold text
+      borderRadius: "10px",          // smooth corners
+      border: "1px solid #01050aff",   // optional border
+    }}
+  >
+    {snackbar.message}
+  </Alert>
+</Snackbar>
+
       </Box>
     </ThemeProvider>
   );
