@@ -19,6 +19,7 @@ import EmailSummary from "./pages/EmailSummary";
 import CostManager from "./pages/CostManager";
 import CostSummary from "./pages/CostSummary";
 import Renewal from "./pages/Renewal";
+import UserAllotments from "./pages/UserAllotments"; // ✅ Add this impor
 
 function App() {
   const [user, setUser] = useState(null);
@@ -64,6 +65,8 @@ function App() {
         <Route path="/scrap-items" element={user ? <ScrapItems /> : <Navigate to="/" replace />} />
         <Route path="/stock-items" element={user ? <StockItems /> : <Navigate to="/" replace />} />
         <Route path="/asset-summary" element={user ? <AssetSummary /> : <Navigate to="/" replace />} />
+        <Route path="/user-allotments" element={user ? <UserAllotments /> : <Navigate to="/" replace />} />
+    
 
         {/* COST MODULES */}
         <Route path="/cost-manager" element={user ? <CostManager /> : <Navigate to="/" replace />} />
