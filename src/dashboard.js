@@ -17,10 +17,11 @@ import {
   Toolbar,
   Typography,
   Divider,
-  Button,
   Collapse,
   Snackbar,
   Alert,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -31,6 +32,8 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import BuildIcon from "@mui/icons-material/Build";
+import PushPinIcon from "@mui/icons-material/PushPin";
+import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 
 import AssetSummaryTable from "./pages/AssetSummaryTable";
 
@@ -57,7 +60,9 @@ const Dashboard = ({ setUser }) => {
   const [openCost, setOpenCost] = useState(false);
   const [summary, setSummary] = useState([]);
 
-  // ---------- Renewal notification ----------
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [freezeSidebar, setFreezeSidebar] = useState(true);
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -69,31 +74,29 @@ const Dashboard = ({ setUser }) => {
     fetchRenewalsNotification();
   }, []);
 
-  // ---------- Asset Summary ----------
   const fetchSummary = async () => {
     try {
-      const res = await axios.get(process.env.REACT_APP_API_URL + "/asset-summary");
+      const res = await axios.get(
+        process.env.REACT_APP_API_URL + "/asset-summary"
+      );
       setSummary(res.data || []);
-    } catch (err) {
-      console.error("Error loading summary", err);
+    } catch {
       setSummary([]);
     }
   };
 
-  // ---------- Renewal Notification ----------
   const fetchRenewalsNotification = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL ;
+      const API_URL = process.env.REACT_APP_API_URL;
       const res = await axios.get(`${API_URL}/renewals`);
-      const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || [];
 
-      // Filter renewals due within 2 months
       const dueSoon = data.filter((row) => {
         if (!row.next_due_date) return false;
-        const nextDue = dayjs(row.next_due_date, "YYYY-MM-DD");
-        const today = dayjs();
-        const twoMonthsLater = today.add(2, "month");
-        return nextDue.isAfter(today.subtract(1, "day")) && nextDue.isBefore(twoMonthsLater.add(1, "day"));
+        const nextDue = dayjs(row.next_due_date);
+        return nextDue.isBefore(dayjs().add(2, "month"));
       });
 
       if (dueSoon.length > 0) {
@@ -103,12 +106,9 @@ const Dashboard = ({ setUser }) => {
           severity: "warning",
         });
       }
-    } catch (err) {
-      console.error("Failed to fetch renewals for dashboard notification", err);
-    }
+    } catch {}
   };
 
-  // ---------- Logout ----------
   const handleLogout = async () => {
     await supabase.auth.signOut();
     if (setUser) setUser(null);
@@ -120,7 +120,10 @@ const Dashboard = ({ setUser }) => {
       <Box sx={{ display: "flex" }}>
         {/* SIDEBAR */}
         <Drawer
-          variant="permanent"
+          variant={freezeSidebar ? "permanent" : "temporary"}
+          open={freezeSidebar || drawerOpen}
+          onClose={() => !freezeSidebar && setDrawerOpen(false)}
+          ModalProps={{ keepMounted: true }}
           sx={{
             width: drawerWidth,
             flexShrink: 0,
@@ -128,8 +131,12 @@ const Dashboard = ({ setUser }) => {
               width: drawerWidth,
               boxSizing: "border-box",
               bgcolor: "#1e1e1e",
+              display: "flex",
+              flexDirection: "column",
             },
           }}
+          onMouseEnter={() => !freezeSidebar && setDrawerOpen(true)}
+          onMouseLeave={() => !freezeSidebar && setDrawerOpen(false)}
         >
           <Toolbar>
             <Typography variant="h5" fontWeight={700}>
@@ -139,108 +146,126 @@ const Dashboard = ({ setUser }) => {
 
           <Divider />
 
-          <List>
-            <ListItemButton onClick={() => navigate("/indent")}>
-              <ListItemIcon>
-                <DescriptionIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText primary="Indent" />
-            </ListItemButton>
+          {/* MENUS */}
+          <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+            <List>
+              <ListItemButton onClick={() => navigate("/indent")}>
+                <ListItemIcon>
+                  <DescriptionIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="Indent" />
+              </ListItemButton>
 
-            <ListItemButton onClick={() => navigate("/invoice-manager")}>
-              <ListItemIcon>
-                <InventoryIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText primary="Invoice Manager" />
-            </ListItemButton>
+              <ListItemButton onClick={() => navigate("/invoice-manager")}>
+                <ListItemIcon>
+                  <InventoryIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="Invoice Manager" />
+              </ListItemButton>
 
-            {/* ASSETS */}
-            <ListItemButton onClick={() => setOpenAssets(!openAssets)}>
-              <ListItemIcon>
-                <DashboardIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText primary="Assets" />
-              {openAssets ? <ExpandLess /> : <ExpandMore />}
-            </ListItemButton>
+              <ListItemButton onClick={() => setOpenAssets(!openAssets)}>
+                <ListItemIcon>
+                  <DashboardIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="Assets" />
+                {openAssets ? <ExpandLess /> : <ExpandMore />}
+              </ListItemButton>
 
-            <Collapse in={openAssets} timeout="auto" unmountOnExit>
-              <List disablePadding>
-                <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/asset-details")}>
-                  <ListItemIcon>
-                    <BuildIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Asset Details" />
-                </ListItemButton>
-                <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/asset-summary")}>
-                  <ListItemIcon>
-                    <BuildIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Asset Summary" />
-                </ListItemButton>
-                <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/scrap-items")}>
-                  <ListItemIcon>
-                    <BuildIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Scrap Items" />
-                </ListItemButton>
-                <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/stock-items")}>
-                  <ListItemIcon>
-                    <BuildIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Stock Items" />
-                </ListItemButton>
-              </List>
-            </Collapse>
+              <Collapse in={openAssets}>
+                <List disablePadding>
+                  {[
+                    ["/asset-details", "Asset Details"],
+                    ["/asset-summary", "Asset Summary"],
+                    ["/scrap-items", "Scrap Items"],
+                    ["/stock-items", "Stock Items"],
+                  ].map(([path, label]) => (
+                    <ListItemButton
+                      key={path}
+                      sx={{ pl: 6 }}
+                      onClick={() => navigate(path)}
+                    >
+                      <ListItemIcon>
+                        <BuildIcon color="primary" />
+                      </ListItemIcon>
+                      <ListItemText primary={label} />
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Collapse>
 
-            {/* COST */}
-            <ListItemButton onClick={() => setOpenCost(!openCost)}>
-              <ListItemIcon>
-                <ReceiptIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText primary="Cost Manager" />
-              {openCost ? <ExpandLess /> : <ExpandMore />}
-            </ListItemButton>
+              <ListItemButton onClick={() => setOpenCost(!openCost)}>
+                <ListItemIcon>
+                  <ReceiptIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="Cost Manager" />
+                {openCost ? <ExpandLess /> : <ExpandMore />}
+              </ListItemButton>
 
-            <Collapse in={openCost} timeout="auto" unmountOnExit>
-              <List disablePadding>
-                <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/cost-manager")}>
-                  <ListItemIcon>
-                    <ReceiptIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Cost Manager" />
-                </ListItemButton>
-                <ListItemButton sx={{ pl: 6 }} onClick={() => navigate("/cost-summary")}>
-                  <ListItemIcon>
-                    <ReceiptIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Cost Summary" />
-                </ListItemButton>
-              </List>
-            </Collapse>
+              <Collapse in={openCost}>
+                <List disablePadding>
+                  <ListItemButton
+                    sx={{ pl: 6 }}
+                    onClick={() => navigate("/cost-manager")}
+                  >
+                    <ListItemIcon>
+                      <ReceiptIcon color="primary" />
+                    </ListItemIcon>
+                    <ListItemText primary="Cost Manager" />
+                  </ListItemButton>
+                  <ListItemButton
+                    sx={{ pl: 6 }}
+                    onClick={() => navigate("/cost-summary")}
+                  >
+                    <ListItemIcon>
+                      <ReceiptIcon color="primary" />
+                    </ListItemIcon>
+                    <ListItemText primary="Cost Summary" />
+                  </ListItemButton>
+                </List>
+              </Collapse>
 
-            {/* RENEWAL */}
-            <ListItemButton onClick={() => navigate("/renewal")}>
-              <ListItemIcon>
-                <ReceiptIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText primary="Renewal" />
-            </ListItemButton>
-          </List>
+              <ListItemButton onClick={() => navigate("/renewal")}>
+                <ListItemIcon>
+                  <ReceiptIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="Renewal" />
+              </ListItemButton>
+            </List>
+          </Box>
 
-          <Box sx={{ flexGrow: 1 }} />
+          <Divider />
 
-          <Box sx={{ p: 2 }}>
-            <Button
-              fullWidth
-              variant="contained"
-              startIcon={<LogoutIcon />}
-              onClick={handleLogout}
-              sx={{ borderRadius: 2, py: 1 }}
-            >
-              Logout
-            </Button>
+          {/* FOOTER: FREEZE + LOGOUT */}
+          <Box sx={{ p: 1, display: "flex", justifyContent: "space-between" }}>
+            <Tooltip title={freezeSidebar ? "Unfreeze Sidebar" : "Freeze Sidebar"}>
+              <IconButton
+                onClick={() => setFreezeSidebar((prev) => !prev)}
+                color="primary"
+              >
+                {freezeSidebar ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+              </IconButton>
+            </Tooltip>
+
+            <IconButton color="error" onClick={handleLogout}>
+              <LogoutIcon />
+            </IconButton>
           </Box>
         </Drawer>
+
+        {/* HOVER EDGE */}
+        {!freezeSidebar && (
+          <Box
+            sx={{
+              width: 12,
+              position: "fixed",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              zIndex: 2000,
+            }}
+            onMouseEnter={() => setDrawerOpen(true)}
+          />
+        )}
 
         {/* MAIN CONTENT */}
         <Box
@@ -248,17 +273,20 @@ const Dashboard = ({ setUser }) => {
           sx={{
             flexGrow: 1,
             p: 4,
-            ml: `${drawerWidth}px`,
+            ml: freezeSidebar ? `${drawerWidth}px` : 0,
             mt: "80px",
+            transition: "margin-left 0.3s ease",
           }}
         >
           <Box
             sx={{
               position: "fixed",
               top: 0,
-              left: `${drawerWidth}px`,
+              left: freezeSidebar ? `${drawerWidth}px` : 0,
               right: 0,
               height: "64px",
+              background:
+                "rgba(12, 64, 235, 1) url('https://github.com/pankaj624789/image/blob/main/fsimage.png?raw=true') no-repeat top right",
               bgcolor: "black",
               display: "flex",
               alignItems: "center",
@@ -272,47 +300,51 @@ const Dashboard = ({ setUser }) => {
             </Typography>
           </Box>
 
-          {/* TABLE SECTION */}
-          <Box sx={{ position: "relative", left: "-250px", top: "-50px" }}>
-            <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5, textAlign: "left" }}>
-              Assets
-            </Typography>
+          <Box
+            sx={{
+            mt: -0.5,
+            ml: freezeSidebar ? 0 : 2,
+            transition: "margin-left 0.3s ease",
+           }}
+         >
+           <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
+            Assets
+           </Typography>
 
-            {summary.length > 0 ? (
-              <AssetSummaryTable summary={summary} />
-            ) : (
-              <Typography sx={{ textAlign: "center", mt: 3 }}>Loading summary...</Typography>
-            )}
-          </Box>
+          {summary.length > 0 ? (
+           <AssetSummaryTable summary={summary} />
+         ) : (
+           <Typography sx={{ mt: 3 }}>Loading summary...</Typography>
+         )}
         </Box>
 
-        {/* ---------- Renewal Snackbar ---------- */}
-<Snackbar
-  open={snackbar.open}
-  autoHideDuration={8000}
-  onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-  anchorOrigin={{ vertical: "top", horizontal: "right" }}
->
-  <Alert
-    severity={snackbar.severity}
-    sx={{
-      backgroundColor: "#ee3f39ff",   // custom background
-      color: "#e8f806ff",              // custom font color
-      fontWeight: 600,               // bold text
-      borderRadius: "10px",          // smooth corners
-      border: "1px solid #01050aff",   // optional border
-    }}
-  >
-    {snackbar.message}
-  </Alert>
-</Snackbar>
+        </Box>
 
+        {/* SNACKBAR */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={8000}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert
+            severity={snackbar.severity}
+            sx={{
+              backgroundColor: "#ee3f39ff",
+              color: "#e8f806ff",
+              fontWeight: 600,
+              borderRadius: "10px",
+              border: "1px solid #01050aff",
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </ThemeProvider>
   );
 };
 
 export default Dashboard;
-
 
 
