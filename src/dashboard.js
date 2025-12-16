@@ -34,6 +34,9 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import BuildIcon from "@mui/icons-material/Build";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
+import SummarizeIcon from "@mui/icons-material/Summarize";
+import ListAltIcon from "@mui/icons-material/ListAlt";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 
 import AssetSummaryTable from "./pages/AssetSummaryTable";
 
@@ -114,6 +117,7 @@ const Dashboard = ({ setUser }) => {
     if (setUser) setUser(null);
     navigate("/");
   };
+  
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -139,7 +143,7 @@ const Dashboard = ({ setUser }) => {
           onMouseLeave={() => !freezeSidebar && setDrawerOpen(false)}
         >
           <Toolbar>
-            <Typography variant="h5" fontWeight={700}>
+            <Typography variant="h5" fontWeight={700} sx={{ color: "#1976d2" }}>
               CRI IT PORTAL
             </Typography>
           </Toolbar>
@@ -151,47 +155,62 @@ const Dashboard = ({ setUser }) => {
             <List>
               <ListItemButton onClick={() => navigate("/indent")}>
                 <ListItemIcon>
-                  <DescriptionIcon color="primary" />
+                  <DescriptionIcon sx={{ color: "#6a1b9a" }} />  
                 </ListItemIcon>
                 <ListItemText primary="Indent" />
               </ListItemButton>
 
               <ListItemButton onClick={() => navigate("/invoice-manager")}>
                 <ListItemIcon>
-                  <InventoryIcon color="primary" />
+                  <InventoryIcon sx={{ color: "#f8f40bff" }} />
                 </ListItemIcon>
                 <ListItemText primary="Invoice Manager" />
               </ListItemButton>
 
               <ListItemButton onClick={() => setOpenAssets(!openAssets)}>
                 <ListItemIcon>
-                  <DashboardIcon color="primary" />
+                  <DashboardIcon sx={{ color: "#ed6c02" }} />
                 </ListItemIcon>
                 <ListItemText primary="Assets" />
                 {openAssets ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
 
-              <Collapse in={openAssets}>
-                <List disablePadding>
-                  {[
-                    ["/asset-details", "Asset Details"],
-                    ["/asset-summary", "Asset Summary"],
-                    ["/scrap-items", "Scrap Items"],
-                    ["/stock-items", "Stock Items"],
-                  ].map(([path, label]) => (
-                    <ListItemButton
-                      key={path}
-                      sx={{ pl: 6 }}
-                      onClick={() => navigate(path)}
-                    >
-                      <ListItemIcon>
-                        <BuildIcon color="primary" />
-                      </ListItemIcon>
-                      <ListItemText primary={label} />
-                    </ListItemButton>
-                  ))}
-                </List>
-              </Collapse>
+<Collapse in={openAssets}>
+  <List disablePadding>
+    {[
+      {
+        path: "/asset-details",
+        label: "Asset Details",
+        icon: <BuildIcon sx={{ color: "#1976d2" }} />,
+      },
+      {
+        path: "/asset-summary",
+        label: "Asset Summary",
+        icon: <SummarizeIcon sx={{ color: "#2e7d32" }} />, // green
+      },
+      {
+        path: "/scrap-items",
+        label: "Scrap Items",
+        icon: <ReceiptIcon sx={{ color: "#d32f2f" }} />, // red
+      },
+      {
+        path: "/stock-items",
+        label: "Stock Items",
+        icon: <InventoryIcon sx={{ color: "#ed6c02" }} />, // orange
+      },
+    ].map(({ path, label, icon }) => (
+      <ListItemButton
+        key={path}
+        sx={{ pl: 6 }}
+        onClick={() => navigate(path)}
+      >
+        <ListItemIcon>{icon}</ListItemIcon>
+        <ListItemText primary={label} />
+      </ListItemButton>
+    ))}
+  </List>
+</Collapse>
+
 
               <ListItemButton onClick={() => setOpenCost(!openCost)}>
                 <ListItemIcon>
@@ -208,7 +227,7 @@ const Dashboard = ({ setUser }) => {
                     onClick={() => navigate("/cost-manager")}
                   >
                     <ListItemIcon>
-                      <ReceiptIcon color="primary" />
+                      <ListAltIcon sx={{ color: "#2e7d32" }} />
                     </ListItemIcon>
                     <ListItemText primary="Cost Manager" />
                   </ListItemButton>
@@ -217,7 +236,7 @@ const Dashboard = ({ setUser }) => {
                     onClick={() => navigate("/cost-summary")}
                   >
                     <ListItemIcon>
-                      <ReceiptIcon color="primary" />
+                      <SummarizeIcon sx={{ color: "#d32f2f" }} />
                     </ListItemIcon>
                     <ListItemText primary="Cost Summary" />
                   </ListItemButton>
@@ -226,7 +245,7 @@ const Dashboard = ({ setUser }) => {
 
               <ListItemButton onClick={() => navigate("/renewal")}>
                 <ListItemIcon>
-                  <ReceiptIcon color="primary" />
+                  <DeleteSweepIcon sx={{ color: "#1976d2" }} />
                 </ListItemIcon>
                 <ListItemText primary="Renewal" />
               </ListItemButton>

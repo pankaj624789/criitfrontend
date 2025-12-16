@@ -168,7 +168,7 @@ function CostManager() {
           overflow: "hidden",
         }}
       >
-        <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+        <div style={{ maxHeight: "85vh", overflowY: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead style={{ position: "sticky", top: 0, zIndex: 10 }}>
               <tr style={{ background: "#1976d2", color: "white" }}>
