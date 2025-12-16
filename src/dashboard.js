@@ -37,6 +37,8 @@ import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import EmailIcon from "@mui/icons-material/Email";
+
 
 import AssetSummaryTable from "./pages/AssetSummaryTable";
 
@@ -244,7 +246,7 @@ const Dashboard = ({ setUser }) => {
               </Collapse>
                <ListItemButton onClick={() => setOpenCost(!openCost)}>
                 <ListItemIcon>
-                  <ReceiptIcon color="primary" />
+                  <EmailIcon color="primary" />
                 </ListItemIcon>
                 <ListItemText primary="Email Manager" />
                 {openCost ? <ExpandLess /> : <ExpandMore />}
@@ -257,7 +259,7 @@ const Dashboard = ({ setUser }) => {
                     onClick={() => navigate("/email-manager")}
                   >
                     <ListItemIcon>
-                      <ListAltIcon sx={{ color: "#2e7d32" }} />
+                      <EmailIcon sx={{ color: "#2e7d32" }} />
                     </ListItemIcon>
                     <ListItemText primary="Email Manager" />
                   </ListItemButton>
