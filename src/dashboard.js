@@ -242,6 +242,36 @@ const Dashboard = ({ setUser }) => {
                   </ListItemButton>
                 </List>
               </Collapse>
+               <ListItemButton onClick={() => setOpenCost(!openCost)}>
+                <ListItemIcon>
+                  <ReceiptIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="Email Manager" />
+                {openCost ? <ExpandLess /> : <ExpandMore />}
+              </ListItemButton>
+
+              <Collapse in={openCost}>
+                <List disablePadding>
+                  <ListItemButton
+                    sx={{ pl: 6 }}
+                    onClick={() => navigate("/email-manager")}
+                  >
+                    <ListItemIcon>
+                      <ListAltIcon sx={{ color: "#2e7d32" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Email Manager" />
+                  </ListItemButton>
+                  <ListItemButton
+                    sx={{ pl: 6 }}
+                    onClick={() => navigate("/emailsummary")}
+                  >
+                    <ListItemIcon>
+                      <SummarizeIcon sx={{ color: "#d32f2f" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Email Summary" />
+                  </ListItemButton>
+                </List>
+              </Collapse>
 
               <ListItemButton onClick={() => navigate("/renewal")}>
                 <ListItemIcon>
