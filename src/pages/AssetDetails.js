@@ -7,7 +7,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 const fieldMap = {
   "S/N": "sn",
   Location: "location",
-  User: "user_name",
+  "User Name": "user_name",
   "Asset Number": "asset_number",
   "Department": "department",
   "Make/Model": "make_model",
