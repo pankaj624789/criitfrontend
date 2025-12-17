@@ -201,7 +201,7 @@ const today = new Date().toLocaleDateString();
             <tr>
               <th style={styles.th}>Select</th>
               {[
-                "ID",
+                
                 "Requisition No",
                 "Description",
                 "Req Qty",
@@ -233,7 +233,7 @@ const today = new Date().toLocaleDateString();
                     onChange={() => handleCheckboxChange(item.Id)}
                   />
                 </td>
-                <td style={styles.td}>{item.Id}</td>
+                
                 <td style={styles.td}>{item.Requisition_No}</td>
                 <td style={styles.td}>{item.DescriptionOfMaterial}</td>
                 <td style={styles.td}>{item.ReqQty}</td>
