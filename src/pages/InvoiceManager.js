@@ -14,6 +14,7 @@ import {
   Typography,
   IconButton,
   Paper,
+  MenuItem,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -111,20 +112,20 @@ const formatDisplayDate = (d) => {
 // =============== MAIN COMPONENT ===============
 function InvoiceManager() {
   const [invoices, setInvoices] = useState([]);
+  const [users, setUsers] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  
+
   const pageSize = 500;
 
-  // Fetch data
+  // Fetch invoices
   const load = async (p = 1, q = "") => {
     try {
       const res = await axios.get(API, {
         params: { search: q, page: p, pageSize },
       });
-
       setInvoices(res.data.data || []);
     } catch (err) {
       console.error("Error loading invoices", err);
@@ -132,15 +133,25 @@ function InvoiceManager() {
     }
   };
 
+  // Fetch distinct users for dropdown
+  const loadUsers = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/assets/users`);
+      setUsers(res.data || []);
+    } catch (err) {
+      console.error("Failed to load users", err);
+    }
+  };
+
   useEffect(() => {
     load(1, search);
+    loadUsers();
   }, [search]);
 
-  // =============== SAVE HANDLER ===============
+  // Save invoice
   const saveInvoice = async () => {
     try {
       const payload = toBackend(form);
-
       if (editingId) {
         await axios.put(`${API}/${editingId}`, payload);
         alert("Updated successfully");
@@ -148,7 +159,6 @@ function InvoiceManager() {
         await axios.post(API, payload);
         alert("Added successfully");
       }
-
       setOpen(false);
       load(1, search);
     } catch (err) {
@@ -157,17 +167,16 @@ function InvoiceManager() {
     }
   };
 
-  // =============== EDIT HANDLER ===============
+  // Edit invoice
   const editInvoice = (inv) => {
     setEditingId(inv.sn);
     setForm(toForm(inv));
     setOpen(true);
   };
 
-  // =============== DELETE ===============
+  // Delete invoice
   const deleteInvoice = async (id) => {
     if (!window.confirm("Delete this invoice?")) return;
-
     try {
       await axios.delete(`${API}/${id}`);
       load(1, search);
@@ -177,7 +186,7 @@ function InvoiceManager() {
     }
   };
 
-  // =============== DOWNLOAD EXCEL ===============
+  // Excel download
   const excelDate = (d) =>
     (new Date(d) - new Date(Date.UTC(1899, 11, 30))) / 86400000;
 
@@ -201,7 +210,7 @@ function InvoiceManager() {
     XLSX.writeFile(wb, "Invoice_Report.xlsx");
   };
 
-  // =============== RENDER UI ===============
+  // ================= RENDER UI =================
   return (
     <div style={{ background: "#f5f7fa", minHeight: "100vh" }}>
       <AppBar position="sticky" sx={{ background: "#1565c0" }}>
@@ -209,15 +218,12 @@ function InvoiceManager() {
           <IconButton color="inherit" href="/dashboard">
             <ArrowBackIcon />
           </IconButton>
-
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Invoice Manager
           </Typography>
-
           <Button color="inherit" onClick={downloadExcel} sx={{ mr: 2 }}>
             Download Excel
           </Button>
-
           <Button
             variant="outlined"
             color="inherit"
@@ -287,7 +293,7 @@ function InvoiceManager() {
         </div>
       </Paper>
 
-      {/* MODAL */}
+      {/* ================= MODAL ================= */}
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>{editingId ? "Update Invoice" : "Add Invoice"}</DialogTitle>
 
@@ -299,19 +305,38 @@ function InvoiceManager() {
               gap: 15,
             }}
           >
-            {Object.keys(form).map((key) => (
-              <TextField
-                key={key}
-                label={key}
-                name={key}
-                type={key.toLowerCase().includes("date") ? "date" : "text"}
-                value={form[key]}
-                onChange={(e) =>
-                  setForm({ ...form, [key]: e.target.value })
-                }
-                InputLabelProps={{ shrink: true }}
-              />
-            ))}
+            {Object.keys(form).map((key) =>
+              key === "userName" ? (
+                <TextField
+                  key={key}
+                  select
+                  label="User Name"
+                  value={form.userName}
+                  onChange={(e) =>
+                    setForm({ ...form, userName: e.target.value })
+                  }
+                  InputLabelProps={{ shrink: true }}
+                >
+                  {users.map((u, i) => (
+                    <MenuItem key={i} value={u.user_name}>
+                      {u.user_name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              ) : (
+                <TextField
+                  key={key}
+                  label={key}
+                  name={key}
+                  type={key.toLowerCase().includes("date") ? "date" : "text"}
+                  value={form[key]}
+                  onChange={(e) =>
+                    setForm({ ...form, [key]: e.target.value })
+                  }
+                  InputLabelProps={{ shrink: true }}
+                />
+              )
+            )}
           </div>
         </DialogContent>
 
