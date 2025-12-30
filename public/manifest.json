@@ -8,12 +8,12 @@
       "type": "image/x-icon"
     },
     {
-      "src": "fevicon1.png",
+      "src": "cri192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "cri.png",
+      "src": "cri512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
