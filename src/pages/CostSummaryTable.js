@@ -1,30 +1,32 @@
-// src/components/CostSummaryTable.js
 import React from "react";
 import { Table, TableHead, TableRow, TableCell, TableBody, Typography } from "@mui/material";
 
-const CostSummaryTable = ({ uniqueLocations, monthWise }) => {
+export default function CostSummaryTable({ monthWise, uniqueLocations }) {
   return (
     <div
       style={{
-        width: "35%",
-        maxHeight: 350,
-        overflowY: "auto",
-        padding: 10,
+        width: "70%",
+        margin: "20px auto",
+        padding: 20,
         border: "1px solid #ddd",
         borderRadius: 8,
         background: "white",
       }}
     >
-      <Typography variant="subtitle1" style={{ fontWeight: "bold", marginBottom: 8 }}>
-        Chart Data
+      <Typography variant="h6" style={{ fontWeight: "bold", marginBottom: 10 }}>
+        Cost Summary Table
       </Typography>
 
       <Table size="small" stickyHeader>
         <TableHead>
           <TableRow>
-            <TableCell><strong>Month</strong></TableCell>
+            <TableCell>
+              <strong>Month</strong>
+            </TableCell>
             {uniqueLocations.map((loc) => (
-              <TableCell key={loc}><strong>{loc}</strong></TableCell>
+              <TableCell key={loc}>
+                <strong>{loc}</strong>
+              </TableCell>
             ))}
           </TableRow>
         </TableHead>
@@ -34,7 +36,9 @@ const CostSummaryTable = ({ uniqueLocations, monthWise }) => {
             <TableRow key={i}>
               <TableCell>{row.Month}</TableCell>
               {uniqueLocations.map((loc) => (
-                <TableCell key={loc}>{row[loc] ? Number(row[loc]).toFixed(0) : 0}</TableCell>
+                <TableCell key={loc}>
+                  {row[loc] ? Number(row[loc]).toFixed(0) : 0}
+                </TableCell>
               ))}
             </TableRow>
           ))}
@@ -42,6 +46,4 @@ const CostSummaryTable = ({ uniqueLocations, monthWise }) => {
       </Table>
     </div>
   );
-};
-
-export default CostSummaryTable;
+}

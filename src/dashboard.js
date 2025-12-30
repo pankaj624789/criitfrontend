@@ -146,7 +146,7 @@ const Dashboard = ({ setUser }) => {
         >
           <Toolbar>
             <Typography variant="h5" fontWeight={700} sx={{ color: "#1976d2" }}>
-              CRI IT PORTAL
+              PORTAL MENUS
             </Typography>
           </Toolbar>
 
