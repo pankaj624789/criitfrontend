@@ -381,7 +381,7 @@ const styles = {
     color: "#fff",
     border: "none",
     padding: "8px 12px",
-    borderRadius: 6,
+    borderRadius: 8,
   },
   cancelBtn: {
     background: "#9ca3af",
