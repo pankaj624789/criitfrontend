@@ -320,7 +320,7 @@ const styles = {
   controls: { display: "flex", gap: 10 },
   addBtn: { background: "#10b981", color: "#fff", padding: "8px 12px", borderRadius: 6, border: "none" },
 
-  tableWrap: { marginTop: 12, background: "#fff", borderRadius: 8, overflow: "auto", maxHeight: 555 },
+  tableWrap: { marginTop: 12, background: "#fff", borderRadius: 8, overflow: "auto", maxHeight: 655 },
   table: { borderCollapse: "collapse", width: "max-content" },
   stickyHeader: { position: "sticky", top: 0, zIndex: 15 },
   th: { padding: 10, background: "#b0c6faff", borderBottom: "1px solid #1a232eff", whiteSpace: "nowrap" },
