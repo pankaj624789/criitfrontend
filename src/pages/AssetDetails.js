@@ -4,6 +4,8 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
+const requiredFields = ["S/N", "Location", "User Name", "Asset Number"];
+
 const fieldMap = {
   "S/N": "sn",
   Location: "location",
@@ -96,20 +98,27 @@ const AssetDetails = () => {
     fetchAssets();
   };
 
-  const handleSave = async () => {
-    const payload = editingAsset
-      ? convertToDBFormat(editingAsset)
-      : convertToDBFormat(newAsset);
+const handleSave = async () => {
+  const data = editingAsset || newAsset;
 
-    editingAsset
-      ? await axios.put(`${API_URL}/asset-details`, payload)
-      : await axios.post(`${API_URL}/asset-details`, payload);
+  for (let field of requiredFields) {
+    if (!data[field] || data[field].toString().trim() === "") {
+      alert(`${field} is required`);
+      return;
+    }
+  }
 
-    setShowModal(false);
-    setEditingAsset(null);
-    setNewAsset({});
-    fetchAssets();
-  };
+  const payload = convertToDBFormat(data);
+
+  editingAsset
+    ? await axios.put(`${API_URL}/asset-details`, payload)
+    : await axios.post(`${API_URL}/asset-details`, payload);
+
+  setShowModal(false);
+  setEditingAsset(null);
+  setNewAsset({});
+  fetchAssets();
+};
 
   const openAllotModal = (asset) => {
     setSelectedAsset(asset);
@@ -250,7 +259,12 @@ const AssetDetails = () => {
 
             {assetKeys.map((label) => (
               <div style={styles.formRow} key={label}>
-                <label>{label}</label>
+                <label>
+                 {label}
+                 {requiredFields.includes(label) && (
+                  <span style={{ color: "red", marginLeft: 4 }}>*</span>
+                  )}
+                </label>
                 <input
                   style={styles.input}
                   value={(editingAsset || newAsset)[label] || ""}
