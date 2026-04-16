@@ -4,7 +4,7 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const requiredFields = ["S/N", "Location", "User Name", "Asset Number"];
+const requiredFields = ["S/N", "Location", "User Name", "Asset Number","Department","DOP Date"];
 
 const fieldMap = {
   "S/N": "sn",
